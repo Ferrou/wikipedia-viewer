@@ -1,0 +1,9 @@
+body{padding-top: 25px;}
+
+.center-block {
+  float:none;
+}
+
+#recherche {
+  width: 100%;
+}

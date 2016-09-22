@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <title>Portfolio</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.6.3/css/font-awesome.min.css">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
+    <link href="style.css" rel="stylesheet">
+</head>
+    
+<body>
+    
+    <div class="container-fluid">
+
+        <h1 class="text-center"><i class="fa fa-wikipedia-w"></i>ikipedia Viewer</h1>
+  
+        <div id="section-recherche" class="row">
+            <div class="col-xs-2 center-block">
+                <div class="row">
+                    <input type="search" name="recherche" id="recherche" placeholder="Tapez votre recherche..." class="form-control center-block" />
+                </div>
+                <div class="row">
+                    <button id="chercher" class="btn btn-default" style="float:left">Chercher</button>
+                    <button id="aleatoire" class="btn btn-default" style="float:right">Aléatoire</button>
+                </div>
+            </div>
+        </div> <!-- /section-recherche -->
+
+        <div id="resultats" class="row">
+        </div>
+
+    </div> <!-- /container -->
+    
+</body>
+    
+</html>
+
+<script>
+$(document).ready(function() {
+    $('#chercher').on('click', function() {
+        $('#resultats').html('');   // Supprime les résultats
+        var recherche = $('#recherche').val();
+        console.log(recherche, 1);
+        if (recherche != "") {
+            rechercheWiki(recherche);
+        }
+    });
+
+    $('#aleatoire').on('click', function() {
+        $('#resultats').html('');   // Supprime les résultats
+
+        $.ajax( {
+            url: 'https://fr.wikipedia.org/w/api.php',
+            data: 'action=query&list=random&format=json&rnnamespace=0&rnlimit=1&callback=?',
+            dataType: 'json',
+            type: 'POST',
+            success: function(data) {
+                console.log(data);
+                var titre = data.query.random[0].title;
+                $('#recherche').val(titre);
+                rechercheWiki(titre, 0);
+            },
+            statusCode: {
+                404: function() {
+                    $('#resultats').html('Erreur 404');
+                }
+            },
+            error: function(resultat, statut, erreur) {
+                console.log(resultat);
+                console.log(statut);
+                console.log(erreur);
+            }
+        });
+
+    });
+
+    function rechercheWiki(titre, type) {
+        /*
+            titre : terme à rechercher
+            type : 0 -> renvoie seulement 1 résultat, utilisé pour la recherche aléatoire
+                   1 -> renvoie tout les résultats de la recherche
+        */
+        $.ajax( {
+            url: 'https://fr.wikipedia.org/w/api.php',
+            data: 'action=opensearch&search='+titre+'&format=json&callback=?',
+            dataType: 'json',
+            type: 'POST',
+            success: function(data) {
+                console.log(data);
+                var nbResultats = 0;
+                if (type == 1)
+                    nbResultats = data[1].length;
+                else
+                    nbResultats = 1;
+                for (var i = 0; i < nbResultats; i++) {
+                    $('<div/>', {
+                        'id': 'resultat' + i,
+                        'class': 'well',
+                        html: '<h3><a href="' + data[3][i] + '" target="_blank">' + data[1][i] + '</a></h3><p>' + data[2][i] + '</p><hr/>'
+                    }).appendTo('#resultats');
+                }
+            },
+            statusCode: {
+                404: function() {
+                    $('#resultats').html('Erreur 404');
+                }
+            },
+            error: function(resultat, statut, erreur) {
+                console.log(resultat);
+                console.log(statut);
+                console.log(erreur);
+            }
+        }); 
+    }  
+});
+</script>
